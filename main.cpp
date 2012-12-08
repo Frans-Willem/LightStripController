@@ -12,6 +12,9 @@
 #include <vector>
 #include <math.h>
 #include "CColor.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 LightStripConfig pConfig[] = {
 	{
@@ -63,6 +66,7 @@ void* stripproc(void *pVoidData) {
 	LightStripData *pData = (LightStripData *)pVoidData;
 	int i;
 	CTime timeStart = CTime::Now();
+	int frame = 0;
 	while (true) {
 		std::vector<CColor> data;
 		double seconds = (CTime::Now() - timeStart).ToSeconds();
@@ -96,11 +100,16 @@ void* stripproc(void *pVoidData) {
 		}
 		pData->pQueue->Put(pOutput);
 		pData->pEventNewData->Set();
+		
+		if ((frame += 1) % 50 == 0) {
+			double fps = (double)frame / (CTime::Now() - timeStart).ToSeconds();
+			printf("Framerate %d: %d %e\n", pData->pConfig->nId, (int)fps, fps);
+		}
 	}
 	//Do nothing for now
 }
 
-void mainloop(ftdi_context *pftdic) {
+void mainloop(int fd) {
 	CEvent eventNewData;
 	std::list<LightStripData *> lStrips;
 	for (unsigned int i = 0; i < (sizeof(pConfig)/sizeof(*pConfig)); i++) {
@@ -132,7 +141,13 @@ void mainloop(ftdi_context *pftdic) {
 					//Yes! we can push out one!
 					std::vector<unsigned char> *pOutput = pData->pQueue->Get();
 					pData->pEventDataSent->Set();
-					ftdi_write_data(pftdic, &pOutput->front(), pOutput->size());
+					/*int ret = ftdi_write_data(pftdic, &pOutput->front(), pOutput->size());
+					if (ret < 0) {
+						printf("ftdi_write_data failed on %d: %d\n", pData->pConfig->nId, ret);
+					} else if (ret < pOutput->size()) {
+						printf("ftdi_write_data not all data on %d: %d\n", pData->pConfig->nId, ret);
+					}*/
+					write(fd, (void *)&pOutput->front(), pOutput->size());
 					delete pOutput;
 					//Calculate when the next frame can be pushed out
 					//Use time when frame was started as offset.
@@ -172,22 +187,15 @@ void mainloop(ftdi_context *pftdic) {
 	}
 }
 
-int main() {
-	ftdi_context ftdic;
-	if (ftdi_init(&ftdic) < 0) {
-		printf("ftdi_init failed\n");
-	} else {
-		if (ftdi_usb_open(&ftdic,0x0403,0x6001) < 0) {
-			printf("ftdi_usb_open failed\n");
-		} else {
-			if (ftdi_set_baudrate(&ftdic, 1000000) < 0) {
-				printf("ftdi_set_baudrate failed\n");
-			} else {
-				mainloop(&ftdic);
-			}
-			ftdi_usb_close(&ftdic);
-		}
-		ftdi_deinit(&ftdic);
+int main(int argc, const char **argv) {
+	char szDefaultDevice[] = "/dev/ttyAMA0";
+	const char *szDevice = szDefaultDevice;
+	if (argc > 1) {
+		szDevice = argv[1];
 	}
+	int fd = open(szDevice, O_NOCTTY|O_WRONLY);
+	printf("FD %d\n", fd);
+	mainloop(fd);
+	close(fd);
 	return 0;
 }
