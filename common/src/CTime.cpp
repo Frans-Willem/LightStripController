@@ -132,4 +132,3 @@ CTimeSpan CTimeSpan::operator+(const CTimeSpan &rhs) {
 	ret.m_span.tv_nsec = nsec % 1000000000;
 	return ret;
 }
-

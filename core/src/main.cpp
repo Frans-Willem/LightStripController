@@ -187,7 +187,7 @@ void mainloop(int fd) {
 	}
 }
 
-int main(int argc, const char **argv) {
+extern "C" int coreEntryPoint(int argc, const char **argv) {
 	char szDefaultDevice[] = "/dev/ttyAMA0";
 	const char *szDevice = szDefaultDevice;
 	if (argc > 1) {
