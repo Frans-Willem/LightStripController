@@ -4,7 +4,7 @@
 #include <string>
 #include <string.h>
 
-typedef int (*ENTRYPOINTPTR)(int argc, const char **argv);
+typedef int (*ENTRYPOINTPTR)(const char *rootdir, int argc, const char **argv);
 
 int main(int argc, const char **argv) {
 	std::string strDir(".");
@@ -35,7 +35,7 @@ int main(int argc, const char **argv) {
 		dlclose(common);
 		return -1;
 	}
-	int retval = entry(argc, argv);
+	int retval = entry(strDir.c_str(), argc, argv);
 	dlclose(core);
 	dlclose(common);
 	return retval;

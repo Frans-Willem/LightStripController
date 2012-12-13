@@ -15,27 +15,11 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <libconfig.h++>
+#include <IOutput.h>
+#include <dlfcn.h>
 
-LightStripConfig pConfig[] = {
-	{
-		0,
-		"Bureau",
-		142, 160,
-		5000000, 0
-	},
-	{
-		1,
-		"TV",
-		142, 160,
-		5000000, 0
-	},
-	{
-		2,
-		"Tuin",
-		160, 160,
-		5000000, 0
-	},
-};
+using namespace libconfig;
 
 struct LightStripData {
 	LightStripConfig *pConfig;
@@ -109,12 +93,29 @@ void* stripproc(void *pVoidData) {
 	//Do nothing for now
 }
 
-void mainloop(int fd) {
+void mainloop(IOutput *pOutput, Config &config) {
+	Setting &strips = config.lookup("strips");
 	CEvent eventNewData;
 	std::list<LightStripData *> lStrips;
-	for (unsigned int i = 0; i < (sizeof(pConfig)/sizeof(*pConfig)); i++) {
+	for (int i = 0; i < strips.getLength(); i++) {
+		Setting &currentStrip = strips[i];
+		LightStripConfig *config = new LightStripConfig;
+		config->nId = currentStrip["id"];
+		config->strName = currentStrip["name"].c_str();
+		config->nLengthDisplay = currentStrip["visibleLength"];
+		config->nLengthTotal = currentStrip["totalLength"];
+		config->nMinimumPauseNs = currentStrip["pauseNs"];
+		config->nMaxFramerate = currentStrip["maxFramerate"];
+		/*
+			int nId;
+	std::string strName; //Name
+	int nLengthDisplay; //Number of LEDs that should light up
+	int nLengthTotal; //Total number of LEDs, including ones that should be off. (usually 160)
+	unsigned long nMinimumPauseNs; //In nanoseconds, minimum pause between frames.
+	unsigned long nMaxFramerate; //Maximum number of frames to allow, or 0 for infinite
+		*/
 		LightStripData *data = new LightStripData;
-		data->pConfig = &pConfig[i];
+		data->pConfig = config;
 		data->pQueue = new CSizedQueue<std::vector<unsigned char> *>(1);
 		data->pEventNewData = &eventNewData;
 		data->pEventDataSent = new CEvent();
@@ -139,16 +140,11 @@ void mainloop(int fd) {
 					bWait = true;
 				} else {
 					//Yes! we can push out one!
-					std::vector<unsigned char> *pOutput = pData->pQueue->Get();
+					std::vector<unsigned char> *pOutputData = pData->pQueue->Get();
 					pData->pEventDataSent->Set();
-					/*int ret = ftdi_write_data(pftdic, &pOutput->front(), pOutput->size());
-					if (ret < 0) {
-						printf("ftdi_write_data failed on %d: %d\n", pData->pConfig->nId, ret);
-					} else if (ret < pOutput->size()) {
-						printf("ftdi_write_data not all data on %d: %d\n", pData->pConfig->nId, ret);
-					}*/
-					write(fd, (void *)&pOutput->front(), pOutput->size());
-					delete pOutput;
+					//write(fd, (void *)&pOutput->front(), pOutput->size());
+					pOutput->Write((void *)&pOutputData->front(), pOutputData->size());
+					delete pOutputData;
 					//Calculate when the next frame can be pushed out
 					//Use time when frame was started as offset.
 					CTime timeNextFramerate = timeNow;
@@ -183,19 +179,52 @@ void mainloop(int fd) {
 	for (std::list<LightStripData *>::iterator i = lStrips.begin(); i != lStrips.end(); i++) {
 		void *retval;
 		pthread_join((*i)->thread, &retval);
+		delete (*i)->pConfig;
 		delete *i;
 	}
 }
 
-extern "C" int coreEntryPoint(int argc, const char **argv) {
-	char szDefaultDevice[] = "/dev/ttyAMA0";
-	const char *szDevice = szDefaultDevice;
-	if (argc > 1) {
-		szDevice = argv[1];
+extern "C" int coreEntryPoint(const char *szRoot, int argc, const char **argv) {
+	try {
+		Config config;
+		//config.setAutoConvert(true);
+		config.readFile((argc>1)?argv[1]:"lights.cfg");
+		Setting& settingOutput=config.lookup("output");
+		Setting& settingOutputConfig=settingOutput["config"];
+		std::string strOutputLib(szRoot);
+		strOutputLib += "/outputs/";
+		strOutputLib += settingOutput["type"].c_str();
+		strOutputLib += ".so";
+		void *dlOutput = dlopen(strOutputLib.c_str(), RTLD_NOW);
+		if (!dlOutput) {
+			fprintf(stderr, "Unable to open '%s':\n\t%s\n", strOutputLib.c_str(), dlerror());
+		} else {
+			CreateOutputPtr pCreateOutput = (CreateOutputPtr)dlsym(dlOutput,"CreateOutput");
+			if (!pCreateOutput) {
+				fprintf(stderr, "No CreateOutput symbol found in '%s'.\n", strOutputLib.c_str());
+			} else {
+				IOutput *pOutput = pCreateOutput(settingOutputConfig);
+				if (!pOutput) {
+					fprintf(stderr, "CreateOutput returned NULL.\n");
+				} else {
+					mainloop(pOutput, config);
+					delete pOutput;
+				}
+			}
+			dlclose(dlOutput);
+		}
+		/*
+		char szDefaultDevice[] = "/dev/ttyAMA0";
+		const char *szDevice = szDefaultDevice;
+		if (argc > 1) {
+			szDevice = argv[1];
+		}
+		int fd = open(szDevice, O_NOCTTY|O_WRONLY);
+		printf("FD %d\n", fd);
+		mainloop(fd, config);
+		close(fd);*/
+	} catch (SettingException &s) {
+		fprintf(stderr, "Setting exception (%s):\n\t%s\n", s.what(), s.getPath());
 	}
-	int fd = open(szDevice, O_NOCTTY|O_WRONLY);
-	printf("FD %d\n", fd);
-	mainloop(fd);
-	close(fd);
 	return 0;
 }

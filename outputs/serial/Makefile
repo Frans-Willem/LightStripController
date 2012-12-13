@@ -1,25 +1,26 @@
 CC=g++
-CPPFLAGS=-I./include -I../common/include -fPIC
+CPPFLAGS=-I./include -I../../common/include -fPIC
 DEPS=
 OBJDIR=obj
 SRCDIR=src
 DEPDIR=depends
-SRCS=main.cpp CEvent.cpp CSizedQueue.cpp
+SRCS=SerialOutput.cpp CSerialOutput.cpp
 OBJS=$(patsubst %, $(OBJDIR)/%,$(SRCS:.cpp=.o))
 DEPS=$(patsubst %, $(DEPDIR)/%,$(SRCS:.cpp=.d))
-TARGETPATH=../bin
-TARGET=$(TARGETPATH)/core.so
+TARGETPATH=../../bin/outputs
+TARGET=$(TARGETPATH)/serial.so
 
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	mkdir -p $(TARGETPATH)
-	$(CC) -shared -o $@ $^ -lpthread -lconfig++ -ldl
+	$(CC) -shared -o $@ $^ -lrt -lconfig++
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	mkdir -p $(OBJDIR)
 	$(CC) -c $< -o $@ $(CPPFLAGS)
 
+# Rule for generating dependency files (e.g. which headers were included)
 $(DEPDIR)/%.d: $(SRCDIR)/%.cpp
 	mkdir -p $(DEPDIR)
 	$(CC) -M $< $(CPPFLAGS) > $@.temp
