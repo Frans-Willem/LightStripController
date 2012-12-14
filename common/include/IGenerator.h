@@ -11,8 +11,14 @@ extern "C" IGenerator* CreateGenerator(unsigned int nLength, libconfig::Setting 
 typedef IGenerator* (*CreateGeneratorPtr)(unsigned int nLength, libconfig::Setting &s);
 
 class IGenerator {
-public:
+private:
+	volatile unsigned long m_nRef;
+protected:
 	virtual ~IGenerator();
+	IGenerator();
+public:
+	void AddRef();
+	void Release();
 	virtual void Generate(CColor *pColors) = 0;
 };
 #endif//IGENERATOR_H

@@ -9,7 +9,7 @@ CModuleGenerator::CModuleGenerator(void *pModule, IGenerator *pGenerator) :
 
 }
 CModuleGenerator::~CModuleGenerator() {
-	delete m_pGenerator;
+	m_pGenerator->Release();
 	dlclose(m_pModule);
 }
 void CModuleGenerator::Generate(CColor *pColors) {

@@ -86,7 +86,8 @@ void* CStripThread::Run() {
 	}
 	delete pWaitingOutput;
 	delete[] m_pOutput;
-	delete m_pGenerator;
+	if (m_pGenerator)
+		m_pGenerator->Release();
 }
 
 std::vector<unsigned char> *CStripThread::GetFrame(bool &bNeedWait, CTime &timeNextFrame) {

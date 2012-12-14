@@ -44,7 +44,7 @@ public:
 		IGenerator *pNewGenerator = CModuleGenerator::Create(m_strModule, pConfig->nLengthDisplay, m_setting);
 		if (pNewGenerator) {
 			if (*ppGenerator)
-				delete *ppGenerator;
+				(*ppGenerator)->Release();
 			*ppGenerator = pNewGenerator;
 		}
 	}
