@@ -4,9 +4,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <termios.h>
-/*#include <linux/serial_core.h>
-#include <asm/ioctls.h>
-#include <sys/ioctl.h>*/
+#include <stdio.h>
 
 #define BAUDCASE(x) case x: speed = B ## x ; break;
 

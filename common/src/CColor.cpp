@@ -1,4 +1,5 @@
 #include "CColor.h"
+#include <libconfig.h++>
 
 CColor::CColor() {
 	r=g=b=0.0;
@@ -32,6 +33,10 @@ CColor CColor::HSL(double h, double s, double l) {
 	else temp2 = (l + s) - (l * s);
 	temp1 = (2.0 * l) - temp2;
 	return RGB(HSLInternal(temp1, temp2, h + (1.0/3.0)), HSLInternal(temp1, temp2, h), HSLInternal(temp1, temp2, h - (1.0/3.0)));
+}
+
+CColor CColor::FromSetting(libconfig::Setting &s) {
+	return RGB(s[0],s[1],s[2]);
 }
 
 CColor CColor::operator+(const CColor &rhs) {

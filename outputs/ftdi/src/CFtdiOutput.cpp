@@ -1,5 +1,5 @@
 #include "CFtdiOutput.h"
-
+#include <stdio.h>
 
 CFtdiOutput::CFtdiOutput(ftdi_context fc) : m_fc(fc) {
 

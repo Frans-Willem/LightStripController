@@ -1,7 +1,10 @@
 #ifndef IOUTPUT_H
 #define IOUTPUT_H
 #include <sys/types.h>
-#include <libconfig.h++>
+
+namespace libconfig {
+	class Setting;
+}
 
 class IOutput;
 extern "C" IOutput* CreateOutput(libconfig::Setting &s);
