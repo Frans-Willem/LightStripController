@@ -4,7 +4,7 @@ DEPS=
 OBJDIR=obj
 SRCDIR=src
 DEPDIR=depends
-SRCS=main.cpp CEvent.cpp CSizedQueue.cpp
+SRCS=main.cpp CEvent.cpp CSizedQueue.cpp CDefaultGenerator.cpp CThread.cpp CStripThread.cpp COutputThread.cpp CModuleGenerator.cpp
 OBJS=$(patsubst %, $(OBJDIR)/%,$(SRCS:.cpp=.o))
 DEPS=$(patsubst %, $(DEPDIR)/%,$(SRCS:.cpp=.d))
 TARGETPATH=../bin

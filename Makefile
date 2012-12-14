@@ -1,18 +1,21 @@
-all: common core loader outputs
+all: common core loader outputs generators
 
 common: force_look
-	cd common; make $(MFLAGS)
+	cd $@; make $(MFLAGS)
 core: force_look
-	cd core; make $(MFLAGS)
+	cd $@; make $(MFLAGS)
 loader: force_look
-	cd loader; make $(MFLAGS)
+	cd $@; make $(MFLAGS)
 outputs: force_look
-	cd outputs; make $(MFLAGS)
+	cd $@; make $(MFLAGS)
+generators: force_look
+	cd $@; make $(MFLAGS)
 clean: force_look
 	cd common; make clean $(MFLAGS)
 	cd core; make clean $(MFLAGS)
 	cd loader; make clean $(MFLAGS)
 	cd outputs; make clean $(MFLAGS)
+	cd generators; make clean $(MFLAGS)
 	rm -rf bin
 	
 force_look:

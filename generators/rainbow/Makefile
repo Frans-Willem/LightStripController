@@ -1,20 +1,20 @@
 CC=g++
-CPPFLAGS=-I./include -fPIC
+CPPFLAGS=-I./include -I../../common/include -fPIC
 DEPS=
 OBJDIR=obj
 SRCDIR=src
 DEPDIR=depends
-SRCS=CTime.cpp CColor.cpp IOutput.cpp IGenerator.cpp
+SRCS=RainbowGenerator.cpp CRainbowGenerator.cpp
 OBJS=$(patsubst %, $(OBJDIR)/%,$(SRCS:.cpp=.o))
 DEPS=$(patsubst %, $(DEPDIR)/%,$(SRCS:.cpp=.d))
-TARGETPATH=../bin
-TARGET=$(TARGETPATH)/common.so
+TARGETPATH=../../bin/generators
+TARGET=$(TARGETPATH)/rainbow.so
 
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	mkdir -p $(TARGETPATH)
-	$(CC) -shared -o $@ $^ -lrt -lconfig++
+	$(CC) -shared -o $@ $^ -lconfig++
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	mkdir -p $(OBJDIR)
