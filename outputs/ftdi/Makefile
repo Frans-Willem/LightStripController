@@ -4,17 +4,17 @@ DEPS=
 OBJDIR=obj
 SRCDIR=src
 DEPDIR=depends
-SRCS=SerialOutput.cpp CSerialOutput.cpp
+SRCS=FtdiOutput.cpp CFtdiOutput.cpp
 OBJS=$(patsubst %, $(OBJDIR)/%,$(SRCS:.cpp=.o))
 DEPS=$(patsubst %, $(DEPDIR)/%,$(SRCS:.cpp=.d))
 TARGETPATH=../../bin/outputs
-TARGET=$(TARGETPATH)/serial.so
+TARGET=$(TARGETPATH)/ftdi.so
 
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	mkdir -p $(TARGETPATH)
-	$(CC) -shared -o $@ $^ -lconfig++
+	$(CC) -shared -o $@ $^ -lconfig++ -lftdi
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	mkdir -p $(OBJDIR)
