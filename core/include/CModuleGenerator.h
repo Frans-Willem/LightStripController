@@ -13,7 +13,7 @@ private:
 	CModuleGenerator(void *pModule, IGenerator *pGenerator);
 public:
 	~CModuleGenerator();
-	void Generate(CColor *pColors);
-	static CModuleGenerator *Create(std::string strModule, unsigned int nLength, libconfig::Setting &s);
+	void Generate(CColor *pColors, CTime &timeNextFrame, IGenerator **ppNextGenerator);
+	static CModuleGenerator *Create(std::string strModule, std::vector<IGenerator *> vArguments, unsigned int nLength, libconfig::Setting &s);
 };
 #endif//CMODULEGENERATOR_H

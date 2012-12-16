@@ -31,21 +31,41 @@ std::string strRoot;
 
 class CLoadModuleCommand : public IStripCommand {
 private:
-	std::string m_strModule;
-	Setting& m_setting;
+	std::string m_strModuleGenerator;
+	Setting& m_settingGenerator;
+	std::string m_strModuleTransition;
+	Setting& m_settingTransition;
 public:
-	CLoadModuleCommand(std::string strModule, Setting& s) :
-		m_strModule(strModule),
-		m_setting(s)
+	CLoadModuleCommand(std::string strModuleGenerator, Setting& settingGenerator, std::string strModuleTransition, Setting& settingTransition) :
+		m_strModuleGenerator(strModuleGenerator),
+		m_strModuleTransition(strModuleTransition),
+		m_settingGenerator(settingGenerator),
+		m_settingTransition(settingTransition)
 	{
 	}
 	void Execute(LightStripConfig *pConfig, IGenerator **ppGenerator) {
-		printf("Execute CLoadModuleCommand:\n\t%s\n\t%d\n", m_strModule.c_str(), pConfig->nId);
-		IGenerator *pNewGenerator = CModuleGenerator::Create(m_strModule, pConfig->nLengthDisplay, m_setting);
+		printf("Execute CLoadModuleCommand:\n\t%s\n\t%s\n\t%d\n", m_strModuleGenerator.c_str(), m_strModuleTransition.c_str(), pConfig->nId);
+		std::vector<IGenerator*> vArguments;
+		IGenerator *pNewGenerator = CModuleGenerator::Create(m_strModuleGenerator, vArguments, pConfig->nLengthDisplay, m_settingGenerator);
 		if (pNewGenerator) {
-			if (*ppGenerator)
-				(*ppGenerator)->Release();
-			*ppGenerator = pNewGenerator;
+			vArguments.push_back(pNewGenerator);
+			vArguments.push_back(*ppGenerator);
+			IGenerator *pTransition = CModuleGenerator::Create(m_strModuleTransition, vArguments, pConfig->nLengthDisplay, m_settingTransition);
+			if (pTransition) {
+				if (*ppGenerator)
+					(*ppGenerator)->Release();
+				*ppGenerator = pTransition;
+				pTransition->AddRef();
+				//---
+				pTransition->Release();
+			} else {
+				printf("Unable to load transition :(\n");
+				if (*ppGenerator)
+					(*ppGenerator)->Release();
+				*ppGenerator = pNewGenerator;
+				pNewGenerator->AddRef();
+			}
+			pNewGenerator->Release();
 		}
 	}
 };
@@ -74,14 +94,25 @@ void mainloop(IOutput *pOutput, Config &config) {
 	std::cout<<"Running"<<std::endl;
 	std::string strLine;
 	Setting& sPresets = config.lookup("presets");
+	Setting& sTransitions = config.lookup("transitions");
 	while (std::getline(std::cin, strLine)) {
-		if (!sPresets.exists(strLine)) {
-			std::cout<<"Preset does not exist"<<std::endl;
+		std::string::size_type nSplit = strLine.find_first_of(' ');
+		if (nSplit == std::string::npos) {
+			std::cout<<"<transition> <generator>"<<std::endl;
 		} else {
-			Setting& sPreset = sPresets[strLine];
-			CLoadModuleCommand cmd(strRoot + "/generators/" + sPreset["type"].c_str() + ".so", sPreset["config"]);
-			for (std::list<CStripThread *>::iterator i = lStrips.begin(); i!=lStrips.end(); i++) {
-				(*i)->ExecuteCommand(&cmd);
+			std::string strTransition(strLine, 0, nSplit);
+			std::string strPreset(strLine, nSplit+1);
+			if (!sPresets.exists(strPreset)) {
+				std::cout<<"Preset does not exist"<<std::endl;
+			} else if (!sTransitions.exists(strTransition)) {
+				std::cout<<"Transition does not exist"<<std::endl;
+			} else {
+				Setting& sPreset = sPresets[strPreset];
+				Setting& sTransition = sTransitions[strTransition];
+				CLoadModuleCommand cmd(strRoot + "/generators/" + sPreset["type"].c_str() + ".so", sPreset["config"], strRoot + "/transitions/" + sTransition["type"].c_str() + ".so", sTransition["config"]);
+				for (std::list<CStripThread *>::iterator i = lStrips.begin(); i!=lStrips.end(); i++) {
+					(*i)->ExecuteCommand(&cmd);
+				}
 			}
 		}
 	}

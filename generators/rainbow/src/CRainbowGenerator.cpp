@@ -11,7 +11,7 @@ CRainbowGenerator::CRainbowGenerator(unsigned int nLength, double dRPM, double d
 CRainbowGenerator::~CRainbowGenerator() {
 	//Don't really do anything
 }
-void CRainbowGenerator::Generate(CColor *pColors) {
+void CRainbowGenerator::Generate(CColor *pColors, CTime &timeNextFrame, IGenerator **ppNextGenerator) {
 	CTimeSpan timespanElapsed = CTime::Now() - m_timeStarted;
 	double dElapsed = timespanElapsed.ToSeconds();
 	double dStart = (dElapsed / 60.0) * m_dRPM;

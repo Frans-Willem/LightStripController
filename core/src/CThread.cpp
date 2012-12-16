@@ -1,10 +1,18 @@
 #include "CThread.h"
 #include <string>
 #include <stdio.h>
+#include <libconfig.h++>
 
 void* CThread::RunThread(void *pData) {
 	CThread *thread = (CThread *)pData;
-	return thread->Run();
+	try {
+		return thread->Run();
+	} catch (libconfig::SettingException &s) {
+		fprintf(stderr, "(Thread) Setting exception (%s):\n\t%s\n", s.what(), s.getPath());
+	} catch (std::string &s) {
+		fprintf(stderr, "(Thread) std::string exception:\n\t%s\n", s.c_str());
+	}
+	return NULL;
 }
 
 CThread::CThread() {

@@ -12,6 +12,6 @@ private:
 public:
 	CRainbowGenerator(unsigned int nLength, double dRPM, double dRep);
 	~CRainbowGenerator();
-	void Generate(CColor *pColors);
+	void Generate(CColor *pColors, CTime &timeNextFrame, IGenerator **ppNextGenerator);
 };
 #endif//CRAINBOWGENERATOR_H

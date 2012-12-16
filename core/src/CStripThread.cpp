@@ -43,8 +43,16 @@ unsigned char CStripThread::channel2byte(double color) {
 }
 std::vector<unsigned char> *CStripThread::Generate() {
 	std::vector<unsigned char> *pRetval = new std::vector<unsigned char>();
+	CTime timeTemp;
+	IGenerator *pNewGenerator = NULL;
 	if (m_pGenerator) {
-		m_pGenerator->Generate(m_pOutput);
+		m_pGenerator->Generate(m_pOutput, timeTemp, &pNewGenerator);
+	}
+	if (pNewGenerator) {
+		if (m_pGenerator)
+			m_pGenerator->Release();
+		m_pGenerator = pNewGenerator;
+		timeTemp = CTime::Now();
 	}
 	pRetval->push_back((UART_PACKET_RECIPIENT << 6) | m_pConfig->nId);
 	for (int i=0; i<m_pConfig->nLengthTotal; i++) {
