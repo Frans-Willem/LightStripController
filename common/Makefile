@@ -4,7 +4,7 @@ DEPS=
 OBJDIR=obj
 SRCDIR=src
 DEPDIR=depends
-SRCS=CTime.cpp CColor.cpp IOutput.cpp IGenerator.cpp
+SRCS=CTime.cpp CColor.cpp IOutput.cpp IGenerator.cpp CTransition.cpp
 OBJS=$(patsubst %, $(OBJDIR)/%,$(SRCS:.cpp=.o))
 DEPS=$(patsubst %, $(DEPDIR)/%,$(SRCS:.cpp=.d))
 TARGETPATH=../bin
