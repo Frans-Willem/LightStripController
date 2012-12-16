@@ -1,9 +1,11 @@
 #include "CSinFadeGenerator.h"
 #include <cmath>
+#include <IFrameScheduler.h>
 
-CSinFadeGenerator::CSinFadeGenerator(unsigned int nLength, IGenerator *pFrom, IGenerator *pTo, double dDuration) :
-	m_pBuffer(new CColor[nLength]),
+CSinFadeGenerator::CSinFadeGenerator(unsigned int nLength, IFrameScheduler *pScheduler, IGenerator *pFrom, IGenerator *pTo, double dDuration) :
 	m_nLength(nLength),
+	m_pScheduler(pScheduler),
+	m_pBuffer(new CColor[nLength]),
 	m_pFrom(pFrom),
 	m_pTo(pTo),
 	m_dDuration(dDuration),
@@ -20,29 +22,37 @@ CSinFadeGenerator::~CSinFadeGenerator() {
 	if (m_pTo) m_pTo->Release();
 	delete[] m_pBuffer;
 }
-void CSinFadeGenerator::Generate(CColor *pColors, CTime &timeNextFrame, IGenerator **ppNextGenerator) {
-	CTime timeNextToFrame = CTime::Now();
-	CTime timeNextFromFrame = CTime::Now();
-	IGenerator *pNewTo = NULL;
+bool CSinFadeGenerator::Generate(CColor *pColors, IGenerator **ppNextGenerator) {
 	IGenerator *pNewFrom = NULL;
-	if (m_pTo) m_pTo->Generate(pColors, timeNextToFrame, &pNewTo);
-	if (m_pFrom) m_pFrom->Generate(m_pBuffer, timeNextFromFrame, &pNewFrom);
-	if (pNewTo) {
-		if (m_pTo) m_pTo->Release();
-		m_pTo = pNewTo;
+	if (m_pTo) {
+		IGenerator *pNew = NULL;
+		if (m_pTo->Generate(pColors, &pNew)) {
+			m_pTo->Release();
+			m_pTo = pNew;
+		}
 	}
-	if (pNewFrom) {
-		if (m_pFrom) m_pFrom->Release();
-		m_pFrom = pNewFrom;
+	if (m_pFrom) {
+		IGenerator *pNew = NULL;
+		if (m_pFrom->Generate(m_pBuffer, &pNew)) {
+			m_pFrom->Release();
+			m_pFrom = pNew;
+		}
 	}
-	bool bDone = Transition(pColors, m_pBuffer, timeNextToFrame, timeNextFromFrame, timeNextFrame);
-	if (bDone && m_pTo) {
+	if (!Transition(pColors, m_pBuffer)) {
+		//Not done, so schedule another frame ASAP.
+		if (m_pScheduler)
+			m_pScheduler->ScheduleFrame();
+		return false;
+	}
+	//If we're already done, m_pTo should schedule the new frame
+	if (m_pTo) {
 		m_pTo->AddRef();
-		*ppNextGenerator = m_pTo;
 	}
+	*ppNextGenerator = m_pTo;
+	return true;
 }
 
-bool CSinFadeGenerator::Transition(CColor *pColors, CColor *pFrom, CTime timeNextToFrame, CTime timeNextFromFrame, CTime &timeNextFrame) {
+bool CSinFadeGenerator::Transition(CColor *pColors, CColor *pFrom) {
 	double dProgress = (CTime::Now() - m_timeStarted).ToSeconds() / m_dDuration;
 	bool bDone = false;
 	if (dProgress >= 1.0) {

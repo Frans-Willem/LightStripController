@@ -12,10 +12,10 @@ CModuleGenerator::~CModuleGenerator() {
 	m_pGenerator->Release();
 	dlclose(m_pModule);
 }
-void CModuleGenerator::Generate(CColor *pColors, CTime &timeNextFrame, IGenerator **ppNextGenerator) {
-	return m_pGenerator->Generate(pColors, timeNextFrame, ppNextGenerator);
+bool CModuleGenerator::Generate(CColor *pColors, IGenerator **ppNextGenerator) {
+	return m_pGenerator->Generate(pColors, ppNextGenerator);
 }
-CModuleGenerator *CModuleGenerator::Create(std::string strModule, std::vector<IGenerator*> vArguments, unsigned int nLength, libconfig::Setting &s) {
+CModuleGenerator *CModuleGenerator::Create(std::string strModule, unsigned int nLength, libconfig::Setting &settings, IFrameScheduler *pScheduler, std::vector<IGenerator*> vArguments) {
 	void *pModule = dlopen(strModule.c_str(), RTLD_NOW);
 	if (!pModule) {
 		return NULL;
@@ -25,7 +25,7 @@ CModuleGenerator *CModuleGenerator::Create(std::string strModule, std::vector<IG
 		dlclose(pModule);
 		return NULL;
 	}
-	IGenerator *pGenerator = pCreate(vArguments, nLength, s);
+	IGenerator *pGenerator = pCreate(nLength, settings, pScheduler, vArguments);
 	if (!pGenerator) {
 		dlclose(pModule);
 		return NULL;

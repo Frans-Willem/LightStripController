@@ -9,6 +9,6 @@ private:
 public:
 	CDefaultGenerator(unsigned int nLength);
 	~CDefaultGenerator();
-	void Generate(CColor *pColors, CTime &timeNextFrame, IGenerator **ppNextGenerator);
+	bool Generate(CColor *pColors, IGenerator **ppNextGenerator);
 };
 #endif//CDEFAULTGENERATOR_H

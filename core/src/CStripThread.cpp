@@ -11,10 +11,12 @@ CStripThread::CStripThread(LightStripConfig *pConfig, CEvent *pEventOutput) :
 	m_qOutput(1),
 	m_qCommands(10),
 	m_pEventOutput(pEventOutput),
-	m_timeNextFrame(CTime::Now()),
+	m_timeNextOutput(CTime::Now()),
 	m_bStop(false),
 	m_pGenerator(NULL),
-	m_pOutput(NULL)
+	m_pOutput(NULL),
+	m_bFrameScheduledASAP(true),
+	m_timeNextFrameScheduled(CTime::Now())
 {
 
 }
@@ -43,16 +45,18 @@ unsigned char CStripThread::channel2byte(double color) {
 }
 std::vector<unsigned char> *CStripThread::Generate() {
 	std::vector<unsigned char> *pRetval = new std::vector<unsigned char>();
-	CTime timeTemp;
-	IGenerator *pNewGenerator = NULL;
 	if (m_pGenerator) {
-		m_pGenerator->Generate(m_pOutput, timeTemp, &pNewGenerator);
-	}
-	if (pNewGenerator) {
-		if (m_pGenerator)
+		IGenerator *pNewGenerator = NULL;
+		if (m_pGenerator->Generate(m_pOutput, &pNewGenerator)) {
 			m_pGenerator->Release();
-		m_pGenerator = pNewGenerator;
-		timeTemp = CTime::Now();
+			m_pGenerator = pNewGenerator;
+			if (m_pGenerator)
+				m_pGenerator->AddRef();
+		}
+	} else {
+		CColor black = CColor::RGB(0.0,0.0,0.0);
+		for (unsigned int i = 0; i < m_pConfig->nLengthDisplay; i++)
+			m_pOutput[i] = black;
 	}
 	pRetval->push_back((UART_PACKET_RECIPIENT << 6) | m_pConfig->nId);
 	for (int i=0; i<m_pConfig->nLengthTotal; i++) {
@@ -79,17 +83,25 @@ void* CStripThread::Run() {
 		if (m_qCommands.GetSize() > 0) {
 			Command *pCmd = m_qCommands.Get();
 			m_eventCommand.Set();
-			pCmd->pCmd->Execute(m_pConfig, &m_pGenerator);
+			pCmd->pCmd->Execute(this, &m_pGenerator);
 			pCmd->bDone = true;
 			m_eventCommand.Set();
-		} else if (m_qOutput.GetAvailable() > 0) {
+		} else if (pWaitingOutput == NULL && (m_bFrameScheduledASAP || CTime::Now() > m_timeNextFrameScheduled)) {
+			m_bFrameScheduledASAP = false;
+			m_timeNextFrameScheduled = CTime::Now() + CTimeSpan::FromSeconds(2);
+			pWaitingOutput = Generate();
+		} else if (m_qOutput.GetAvailable() > 0 && pWaitingOutput != NULL) {
 			//Push out
 			m_qOutput.Put(pWaitingOutput);
 			m_pEventOutput->Set();
 			//Generate new data
-			pWaitingOutput = Generate();
+			pWaitingOutput = NULL;
 		} else {
-			m_eventWake.Wait();
+			if (pWaitingOutput == NULL) {
+				m_eventWake.Wait(m_timeNextFrameScheduled.ToTimeSpec());
+			} else {
+				m_eventWake.Wait();
+			}
 		}
 	}
 	delete pWaitingOutput;
@@ -105,14 +117,14 @@ std::vector<unsigned char> *CStripThread::GetFrame(bool &bNeedWait, CTime &timeN
 		return NULL;
 	}
 	//Frame has not yet been scheduled
-	if (CTime::Now() < m_timeNextFrame) {
+	if (CTime::Now() < m_timeNextOutput) {
 		bNeedWait = true;
-		timeNextFrame = m_timeNextFrame;
+		timeNextFrame = m_timeNextOutput;
 		return NULL;
 	}
 	//Calculate next frame
 	if (m_pConfig->nMaxFramerate > 0)
-		m_timeNextFrame = CTime::Now() + CTimeSpan::FromSeconds(1.0 / (double)m_pConfig->nMaxFramerate);
+		m_timeNextOutput = CTime::Now() + CTimeSpan::FromSeconds(1.0 / (double)m_pConfig->nMaxFramerate);
 	//Return
 	std::vector<unsigned char> *pRetval = m_qOutput.Get();
 	m_eventWake.Set();
@@ -120,9 +132,9 @@ std::vector<unsigned char> *CStripThread::GetFrame(bool &bNeedWait, CTime &timeN
 }
 
 void CStripThread::OnFrameSent() {
-	CTime timeNextFrame = CTime::Now() + CTimeSpan::FromNanoSeconds(m_pConfig->nMinimumPauseNs);
-	if (timeNextFrame > m_timeNextFrame) {
-		m_timeNextFrame = timeNextFrame;
+	CTime timeNextOutput = CTime::Now() + CTimeSpan::FromNanoSeconds(m_pConfig->nMinimumPauseNs);
+	if (timeNextOutput > m_timeNextOutput) {
+		m_timeNextOutput = timeNextOutput;
 	}
 }
 
@@ -136,4 +148,17 @@ void CStripThread::ExecuteCommand(IStripCommand *pCmd) {
 	m_qCommands.Put(&cmd);
 	while (!cmd.bDone)
 		m_eventCommand.Wait();
+}
+LightStripConfig *CStripThread::GetConfig() {
+	return m_pConfig;
+}
+void CStripThread::ScheduleFrame() {
+	m_bFrameScheduledASAP = true;
+	m_eventWake.Set();
+}
+void CStripThread::ScheduleFrame(CTime &timeNextFrame) {
+	if (timeNextFrame < m_timeNextFrameScheduled) {
+		m_timeNextFrameScheduled = timeNextFrame;
+		m_eventWake.Set();
+	}
 }

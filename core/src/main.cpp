@@ -43,14 +43,14 @@ public:
 		m_settingTransition(settingTransition)
 	{
 	}
-	void Execute(LightStripConfig *pConfig, IGenerator **ppGenerator) {
-		printf("Execute CLoadModuleCommand:\n\t%s\n\t%s\n\t%d\n", m_strModuleGenerator.c_str(), m_strModuleTransition.c_str(), pConfig->nId);
+	void Execute(CStripThread *pThread, IGenerator **ppGenerator) {
+		printf("Execute CLoadModuleCommand:\n\t%s\n\t%s\n\t%d\n", m_strModuleGenerator.c_str(), m_strModuleTransition.c_str(), pThread->GetConfig()->nId);
 		std::vector<IGenerator*> vArguments;
-		IGenerator *pNewGenerator = CModuleGenerator::Create(m_strModuleGenerator, vArguments, pConfig->nLengthDisplay, m_settingGenerator);
+		IGenerator *pNewGenerator = CModuleGenerator::Create(m_strModuleGenerator, pThread->GetConfig()->nLengthDisplay, m_settingGenerator, pThread, vArguments);
 		if (pNewGenerator) {
 			vArguments.push_back(pNewGenerator);
 			vArguments.push_back(*ppGenerator);
-			IGenerator *pTransition = CModuleGenerator::Create(m_strModuleTransition, vArguments, pConfig->nLengthDisplay, m_settingTransition);
+			IGenerator *pTransition = CModuleGenerator::Create(m_strModuleTransition, pThread->GetConfig()->nLengthDisplay, m_settingTransition, pThread, vArguments);
 			if (pTransition) {
 				if (*ppGenerator)
 					(*ppGenerator)->Release();
@@ -67,6 +67,7 @@ public:
 			}
 			pNewGenerator->Release();
 		}
+		pThread->ScheduleFrame();
 	}
 };
 

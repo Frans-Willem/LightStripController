@@ -1,8 +1,10 @@
 #include "CRainbowGenerator.h"
 #include <CTime.h>
+#include <IFrameScheduler.h>
 
-CRainbowGenerator::CRainbowGenerator(unsigned int nLength, double dRPM, double dRep) :
+CRainbowGenerator::CRainbowGenerator(unsigned int nLength, IFrameScheduler *pScheduler, double dRPM, double dRep) :
 	m_nLength(nLength),
+	m_pScheduler(pScheduler),
 	m_dRPM(dRPM),
 	m_dRep(dRep),
 	m_timeStarted(CTime::Now())
@@ -11,7 +13,7 @@ CRainbowGenerator::CRainbowGenerator(unsigned int nLength, double dRPM, double d
 CRainbowGenerator::~CRainbowGenerator() {
 	//Don't really do anything
 }
-void CRainbowGenerator::Generate(CColor *pColors, CTime &timeNextFrame, IGenerator **ppNextGenerator) {
+bool CRainbowGenerator::Generate(CColor *pColors, IGenerator **ppNextGenerator) {
 	CTimeSpan timespanElapsed = CTime::Now() - m_timeStarted;
 	double dElapsed = timespanElapsed.ToSeconds();
 	double dStart = (dElapsed / 60.0) * m_dRPM;
@@ -20,4 +22,7 @@ void CRainbowGenerator::Generate(CColor *pColors, CTime &timeNextFrame, IGenerat
 		double dPosition = (((double)i) / dLength) * m_dRep;
 		pColors[i] = CColor::HSL(dStart + dPosition, 1.0, 0.5);
 	}
+	if (m_pScheduler)
+		m_pScheduler->ScheduleFrame();
+	return false;
 }

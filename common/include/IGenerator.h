@@ -9,8 +9,9 @@ namespace libconfig {
 
 class CTime;
 class IGenerator;
-extern "C" IGenerator* CreateGenerator(std::vector<IGenerator*> lArguments, unsigned int nLength, libconfig::Setting &s);
-typedef IGenerator* (*CreateGeneratorPtr)(std::vector<IGenerator*> lArguments, unsigned int nLength, libconfig::Setting &s);
+class IFrameScheduler;
+extern "C" IGenerator* CreateGenerator(unsigned int nLength, libconfig::Setting &settings, IFrameScheduler *pScheduler, std::vector<IGenerator*> vArguments);
+typedef IGenerator* (*CreateGeneratorPtr)(unsigned int nLength, libconfig::Setting &settings, IFrameScheduler *pScheduler, std::vector<IGenerator*> vArguments);
 
 class IGenerator {
 private:
@@ -21,6 +22,8 @@ protected:
 public:
 	void AddRef();
 	void Release();
-	virtual void Generate(CColor *pColors, CTime &timeNextFrame, IGenerator **ppNextGenerator) = 0;
+	//Generate a frame
+	//If this generator should be replaced by another one, return true and set ppNextGenerator (and increase the reference count)
+	virtual bool Generate(CColor *pColors, IGenerator **ppNextGenerator) = 0;
 };
 #endif//IGENERATOR_H
