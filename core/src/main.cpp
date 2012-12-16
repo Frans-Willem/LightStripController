@@ -135,7 +135,7 @@ extern "C" int coreEntryPoint(const char *szRoot, int argc, const char **argv) {
 	try {
 		strRoot = szRoot;
 		Config config;
-		//config.setAutoConvert(true);
+		config.setAutoConvert(true);
 		config.readFile((argc>1)?argv[1]:"lights.cfg");
 		Setting& settingOutput=config.lookup("output");
 		Setting& settingOutputConfig=settingOutput["config"];
