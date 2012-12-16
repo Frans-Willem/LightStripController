@@ -71,7 +71,6 @@ std::vector<unsigned char> *CStripThread::Generate() {
 	return pRetval;
 }
 void* CStripThread::Run() {
-	printf("CStripThread::Run %d\n", m_pConfig->nId);
 	//Init
 	m_pOutput = new CColor[m_pConfig->nLengthTotal];
 	for (int i=0; i<m_pConfig->nLengthTotal; i++) {
@@ -88,14 +87,14 @@ void* CStripThread::Run() {
 			m_eventCommand.Set();
 		} else if (pWaitingOutput == NULL && (m_bFrameScheduledASAP || CTime::Now() > m_timeNextFrameScheduled)) {
 			m_bFrameScheduledASAP = false;
-			m_timeNextFrameScheduled = CTime::Now() + CTimeSpan::FromSeconds(2);
+			m_timeNextFrameScheduled = CTime::Now() + CTimeSpan::FromSeconds(10);
 			pWaitingOutput = Generate();
 		} else if (m_qOutput.GetAvailable() > 0 && pWaitingOutput != NULL) {
 			//Push out
 			m_qOutput.Put(pWaitingOutput);
-			m_pEventOutput->Set();
 			//Generate new data
 			pWaitingOutput = NULL;
+			m_pEventOutput->Set();
 		} else {
 			if (pWaitingOutput == NULL) {
 				m_eventWake.Wait(m_timeNextFrameScheduled.ToTimeSpec());
@@ -146,6 +145,7 @@ void CStripThread::ExecuteCommand(IStripCommand *pCmd) {
 	while (m_qCommands.GetAvailable() < 1)
 		m_eventCommand.Wait();
 	m_qCommands.Put(&cmd);
+	m_eventWake.Set();
 	while (!cmd.bDone)
 		m_eventCommand.Wait();
 }

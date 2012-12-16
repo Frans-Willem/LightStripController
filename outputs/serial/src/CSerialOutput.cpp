@@ -17,7 +17,10 @@ CSerialOutput::~CSerialOutput() {
 }
 
 void CSerialOutput::Write(const void *pData, size_t nLen) {
-	write(m_nFD, pData, nLen);
+	if (nLen != write(m_nFD, pData, nLen)) {
+		printf("OUTPUT FAIL\n");
+		fflush(stdout);
+	}
 }
 
 CSerialOutput *CSerialOutput::Create(const char *szDevice, unsigned int baudrate) {

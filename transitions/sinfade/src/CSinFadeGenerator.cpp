@@ -54,11 +54,11 @@ bool CSinFadeGenerator::Generate(CColor *pColors, IGenerator **ppNextGenerator) 
 
 bool CSinFadeGenerator::Transition(CColor *pColors, CColor *pFrom) {
 	double dProgress = (CTime::Now() - m_timeStarted).ToSeconds() / m_dDuration;
-	bool bDone = false;
 	if (dProgress >= 1.0) {
-		dProgress = 1.0;
-		bDone = true;
-	} else if (dProgress < 0.0) {
+		//Already done, so don't bother mixing :)
+		return true;
+	}
+	if (dProgress < 0.0) {
 		dProgress = 0.0;
 	}
 	double dPi = std::atan(1.0) * 4.0;
@@ -66,5 +66,5 @@ bool CSinFadeGenerator::Transition(CColor *pColors, CColor *pFrom) {
 	double dTo = 1.0 - dFrom;
 	for (unsigned int i = 0; i < m_nLength; i++)
 		pColors[i] = (pColors[i] * dTo) + (pFrom[i] * dFrom);
-	return bDone;
+	return false;
 }

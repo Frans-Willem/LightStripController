@@ -67,6 +67,7 @@ public:
 			}
 			pNewGenerator->Release();
 		}
+		//Schedule a new frame ASAP!
 		pThread->ScheduleFrame();
 	}
 };

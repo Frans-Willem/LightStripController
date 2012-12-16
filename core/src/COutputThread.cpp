@@ -34,8 +34,8 @@ void* COutputThread::Run() {
 			std::vector<unsigned char> *pOutputData = pStrip->GetFrame(bStripNeedsWait, timeStripWait);
 			if (pOutputData) {
 				m_pOutput->Write((void *)&pOutputData->front(), pOutputData->size());
-				pStrip->OnFrameSent();
 				delete pOutputData;
+				pStrip->OnFrameSent();
 				m_lStrips.erase(i);
 				m_lStrips.push_back(pStrip);
 				bDidSomething = true;

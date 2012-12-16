@@ -36,7 +36,16 @@ CColor CColor::HSL(double h, double s, double l) {
 }
 
 CColor CColor::FromSetting(libconfig::Setting &s) {
-	return RGB(s[0],s[1],s[2]);
+	if (s.getType() == libconfig::Setting::TypeArray || s.getType() == libconfig::Setting::TypeList) {
+		return RGB(s[0],s[1],s[2]);
+	}
+	double r=0.0,g=0.0,b=0.0;
+	if (s.lookupValue("r",r) || s.lookupValue("g",g) || s.lookupValue("b",b))
+		return RGB(r,g,b);
+	double h=0.0,sat=1.0,l=0.5;
+	if (s.lookupValue("h",h) || s.lookupValue("s",sat) || s.lookupValue("l",l))
+		return HSL(h,sat,l);
+	return RGB(0.0,0.0,0.0);
 }
 
 CColor CColor::operator+(const CColor &rhs) {
