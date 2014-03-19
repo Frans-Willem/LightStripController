@@ -3,9 +3,9 @@
 #include <IOutput.h>
 #include "CSerialOutput.h"
 #include <string>
-#include <libconfig.h++>
+#include <CConfigObject.h>
 
-extern "C" IOutput *CreateOutput(libconfig::Setting& s) {
-	std::string strDevice = s["device"];
-	return CSerialOutput::Create(strDevice.c_str(), s["baudrate"]);
+extern "C" IOutput *CreateOutput(CConfigObject *s) {
+	std::string strDevice = s->getString("device");
+	return CSerialOutput::Create(strDevice.c_str(), s->getInt("baudrate"));
 }

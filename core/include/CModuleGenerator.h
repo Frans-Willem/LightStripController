@@ -14,6 +14,6 @@ private:
 public:
 	~CModuleGenerator();
 	bool Generate(CColor *pColors, IGenerator **ppNextGenerator);
-	static CModuleGenerator *Create(std::string strModule, unsigned int nLength, libconfig::Setting &settings, IFrameScheduler *pScheduler, std::vector<IGenerator*> vArguments);
+	static CModuleGenerator *Create(std::string strModule, unsigned int nLength, CConfigObject *settings, IFrameScheduler *pScheduler, std::vector<IGenerator*> vArguments);
 };
 #endif//CMODULEGENERATOR_H

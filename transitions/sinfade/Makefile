@@ -14,7 +14,7 @@ all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	mkdir -p $(TARGETPATH)
-	$(CC) -shared -o $@ $^ -lconfig++
+	$(CC) -shared -o $@ $^
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	mkdir -p $(OBJDIR)

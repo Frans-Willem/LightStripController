@@ -3,15 +3,12 @@
 #include "CColor.h"
 #include <vector>
 
-namespace libconfig {
-	class Setting;
-}
-
+class CConfigObject;
 class CTime;
 class IGenerator;
 class IFrameScheduler;
-extern "C" IGenerator* CreateGenerator(unsigned int nLength, libconfig::Setting &settings, IFrameScheduler *pScheduler, std::vector<IGenerator*> vArguments);
-typedef IGenerator* (*CreateGeneratorPtr)(unsigned int nLength, libconfig::Setting &settings, IFrameScheduler *pScheduler, std::vector<IGenerator*> vArguments);
+extern "C" IGenerator* CreateGenerator(unsigned int nLength, CConfigObject *pConfig, IFrameScheduler *pScheduler, std::vector<IGenerator*> vArguments);
+typedef IGenerator* (*CreateGeneratorPtr)(unsigned int nLength, CConfigObject *pConfig, IFrameScheduler *pScheduler, std::vector<IGenerator*> vArguments);
 
 class IGenerator {
 private:

@@ -1,16 +1,14 @@
-#ifndef CPIXEL_H
-#define CPIXEL_H
-namespace libconfig {
-	class Setting;
-}
+#ifndef CCOLOR_H
+#define CCOLOR_H
 
+class CConfigObject;
 class CColor {
 public:
 	double r,g,b;
 	CColor();
 	static CColor RGB(double r, double g, double b);
 	static CColor HSL(double h, double s, double l);
-	static CColor FromSetting(libconfig::Setting &s);
+	static CColor FromSetting(CConfigObject *pNode);
 	
 	CColor operator+(const CColor &rhs);
 	CColor operator-(const CColor &rhs);
@@ -19,4 +17,4 @@ public:
 	CColor operator/(const CColor &rhs);
 	CColor operator/(const double rhs);
 };
-#endif//CPIXEL_H
+#endif//CCOLOR_H

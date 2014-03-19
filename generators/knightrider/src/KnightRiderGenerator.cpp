@@ -1,15 +1,15 @@
 #include <IGenerator.h>
 #include "CKnightRiderGenerator.h"
-#include <libconfig.h++>
+#include <CConfigObject.h>
 
-extern "C" IGenerator* CreateGenerator(unsigned int nLength, libconfig::Setting &settings, IFrameScheduler *pScheduler, std::vector<IGenerator*> vArguments) {
-	double dDuration, dTrail, dWidth;
-	if (!settings.lookupValue("duration", dDuration)) dDuration = 4.0;
-	if (!settings.lookupValue("trail", dTrail)) dTrail = 0.2;
-	if (!settings.lookupValue("width", dWidth)) dWidth = 0.1;
+extern "C" IGenerator* CreateGenerator(unsigned int nLength, CConfigObject *s, IFrameScheduler *pScheduler, std::vector<IGenerator*> vArguments) {
+	double dDuration = s->getDouble("duration", 4.0),
+		dTrail = s->getDouble("trail", 0.2),
+		dWidth = s->getDouble("width", 0.1);
+	CConfigObject *sColor=s->get("color");
 	CColor color;
-	if (!settings.exists("color")) color = CColor::RGB(1.0,0.0,0.0);
-	else color = CColor::FromSetting(settings["color"]);
+	if (sColor->isNull()) color = CColor::RGB(1.0,0.0,0.0);
+	else color = CColor::FromSetting(sColor);
 	
 	return new CKnightRiderGenerator(nLength, pScheduler, color, dDuration, dWidth, dTrail);
 }

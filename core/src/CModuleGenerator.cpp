@@ -1,6 +1,6 @@
 #include "CModuleGenerator.h"
 #include <dlfcn.h>
-#include <libconfig.h++>
+#include <CConfigObject.h>
 
 CModuleGenerator::CModuleGenerator(void *pModule, IGenerator *pGenerator) :
 	m_pModule(pModule),
@@ -15,7 +15,7 @@ CModuleGenerator::~CModuleGenerator() {
 bool CModuleGenerator::Generate(CColor *pColors, IGenerator **ppNextGenerator) {
 	return m_pGenerator->Generate(pColors, ppNextGenerator);
 }
-CModuleGenerator *CModuleGenerator::Create(std::string strModule, unsigned int nLength, libconfig::Setting &settings, IFrameScheduler *pScheduler, std::vector<IGenerator*> vArguments) {
+CModuleGenerator *CModuleGenerator::Create(std::string strModule, unsigned int nLength, CConfigObject *settings, IFrameScheduler *pScheduler, std::vector<IGenerator*> vArguments) {
 	void *pModule = dlopen(strModule.c_str(), RTLD_NOW);
 	if (!pModule) {
 		return NULL;

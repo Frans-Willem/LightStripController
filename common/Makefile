@@ -4,7 +4,7 @@ DEPS=
 OBJDIR=obj
 SRCDIR=src
 DEPDIR=depends
-SRCS=CTime.cpp CColor.cpp IOutput.cpp IGenerator.cpp CTransition.cpp
+SRCS=CTime.cpp CColor.cpp IOutput.cpp IGenerator.cpp CTransition.cpp CConfigObject.cpp
 OBJS=$(patsubst %, $(OBJDIR)/%,$(SRCS:.cpp=.o))
 DEPS=$(patsubst %, $(DEPDIR)/%,$(SRCS:.cpp=.d))
 TARGETPATH=../bin
@@ -14,7 +14,7 @@ all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	mkdir -p $(TARGETPATH)
-	$(CC) -shared -o $@ $^ -lrt -lconfig++
+	$(CC) -shared -o $@ $^ -lrt
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	mkdir -p $(OBJDIR)

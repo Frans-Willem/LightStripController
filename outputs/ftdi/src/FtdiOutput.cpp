@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <IOutput.h>
 #include "CFtdiOutput.h"
-#include <libconfig.h++>
+#include <CConfigObject.h>
 
-extern "C" IOutput *CreateOutput(libconfig::Setting& s) {
-	return CFtdiOutput::Create(s["baudrate"]);
+extern "C" IOutput *CreateOutput(CConfigObject *s) {
+	return CFtdiOutput::Create(s->getInt("baudrate"));
 }

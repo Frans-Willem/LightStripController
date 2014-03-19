@@ -1,22 +1,17 @@
 #include <IGenerator.h>
 #include "CParticleHighwayGenerator.h"
-#include <libconfig.h++>
+#include <CConfigObject.h>
 
-extern "C" IGenerator* CreateGenerator(unsigned int nLength, libconfig::Setting &settings, IFrameScheduler *pScheduler, std::vector<IGenerator*> vArguments) {
-	double dMinCreateInterval, dMaxCreateInterval;
-	double dMinSpeed, dMaxSpeed;
-	double dMinLightness, dMaxLightness;
-	double dMinTail, dMaxTail;
-	int nNumColors;
-	if (!settings.lookupValue("mincreateinterval", dMinCreateInterval)) dMinCreateInterval = 0.1;
-	if (!settings.lookupValue("maxcreateinterval", dMaxCreateInterval)) dMaxCreateInterval = 0.5;
-	if (!settings.lookupValue("minspeed", dMinSpeed)) dMinSpeed = 1.0/15.0;
-	if (!settings.lookupValue("maxspeed", dMaxSpeed)) dMaxSpeed = 1.0/3.0;
-	if (!settings.lookupValue("minlightness", dMinLightness)) dMinLightness = 0.1;
-	if (!settings.lookupValue("maxlightness", dMaxLightness)) dMaxLightness = 0.3;
-	if (!settings.lookupValue("mintail", dMinTail)) dMinTail = 1.0/70.0;
-	if (!settings.lookupValue("maxtail", dMaxTail)) dMaxTail = 1.0/7.0;
-	if (!settings.lookupValue("numcolors", nNumColors)) nNumColors = 6;
+extern "C" IGenerator* CreateGenerator(unsigned int nLength, CConfigObject *s, IFrameScheduler *pScheduler, std::vector<IGenerator*> vArguments) {
+	double dMinCreateInterval = s->getDouble("mincreateinterval", 0.1),
+		dMaxCreateInterval = s->getDouble("maxcreateinterval", 0.5);
+	double dMinSpeed = s->getDouble("minspeed", 1.0/15.0),
+		dMaxSpeed = s->getDouble("maxspeed", 1.0/3.0);
+	double dMinLightness = s->getDouble("minlightness", 0.1),
+		dMaxLightness = s->getDouble("maxlightness", 0.3);
+	double dMinTail = s->getDouble("mintail", 1.0/70.0),
+		dMaxTail = s->getDouble("maxtail", 10/7.0);
+	int nNumColors = s->getInt("numcolors", 6);
 	
 	return new CParticleHighwayGenerator(nLength, pScheduler, dMinCreateInterval, dMaxCreateInterval, dMinSpeed, dMaxSpeed, dMinLightness, dMaxLightness, dMinTail, dMaxTail, nNumColors);
 }

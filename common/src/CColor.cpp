@@ -1,5 +1,5 @@
 #include "CColor.h"
-#include <libconfig.h++>
+#include "CConfigObject.h"
 
 CColor::CColor() {
 	r=g=b=0.0;
@@ -35,16 +35,14 @@ CColor CColor::HSL(double h, double s, double l) {
 	return RGB(HSLInternal(temp1, temp2, h + (1.0/3.0)), HSLInternal(temp1, temp2, h), HSLInternal(temp1, temp2, h - (1.0/3.0)));
 }
 
-CColor CColor::FromSetting(libconfig::Setting &s) {
-	if (s.getType() == libconfig::Setting::TypeArray || s.getType() == libconfig::Setting::TypeList) {
-		return RGB(s[0],s[1],s[2]);
+CColor CColor::FromSetting(CConfigObject *pNode) {
+	if (pNode->isArray()) {
+		return RGB(pNode->getDouble(0),pNode->getDouble(1),pNode->getDouble(2));
 	}
-	double r=0.0,g=0.0,b=0.0;
-	if (s.lookupValue("r",r) || s.lookupValue("g",g) || s.lookupValue("b",b))
-		return RGB(r,g,b);
-	double h=0.0,sat=1.0,l=0.5;
-	if (s.lookupValue("h",h) || s.lookupValue("s",sat) || s.lookupValue("l",l))
-		return HSL(h,sat,l);
+	if (pNode->get("r") || pNode->get("g") || pNode->get("b"))
+		return RGB(pNode->getDouble("r"),pNode->getDouble("g"),pNode->getDouble("b"));
+	if (pNode->get("h") || pNode->get("s") || pNode->get("l"))
+		return HSL(pNode->getDouble("h",0.0), pNode->getDouble("s",1.0), pNode->getDouble("l",0.5));
 	return RGB(0.0,0.0,0.0);
 }
 

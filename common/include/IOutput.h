@@ -2,13 +2,10 @@
 #define IOUTPUT_H
 #include <sys/types.h>
 
-namespace libconfig {
-	class Setting;
-}
-
+class CConfigObject;
 class IOutput;
-extern "C" IOutput* CreateOutput(libconfig::Setting &s);
-typedef IOutput* (*CreateOutputPtr)(libconfig::Setting &s);
+extern "C" IOutput* CreateOutput(CConfigObject *s);
+typedef IOutput* (*CreateOutputPtr)(CConfigObject *s);
 
 class IOutput {
 public:

@@ -1,8 +1,8 @@
 #include <IGenerator.h>
 #include "CColorGenerator.h"
-#include <libconfig.h++>
+#include <CConfigObject.h>
 
-extern "C" IGenerator* CreateGenerator(unsigned int nLength, libconfig::Setting &settings, IFrameScheduler *pScheduler, std::vector<IGenerator*> vArguments) {
-	CColor color = CColor::FromSetting(settings);
+extern "C" IGenerator* CreateGenerator(unsigned int nLength, CConfigObject *s, IFrameScheduler *pScheduler, std::vector<IGenerator*> vArguments) {
+	CColor color = CColor::FromSetting(s);
 	return new CColorGenerator(nLength, pScheduler, color);
 }

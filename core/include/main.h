@@ -1,6 +1,8 @@
 #ifndef MAIN_H
 #define MAIN_H
 #include <string>
+#include <set>
+#include <list>
 
 #define UART_PACKET_NOTUSED 0
 #define UART_PACKET_RECIPIENT 1
@@ -15,4 +17,7 @@ struct LightStripConfig {
 	unsigned long nMinimumPauseNs; //In nanoseconds, minimum pause between frames.
 	unsigned long nMaxFramerate; //Maximum number of frames to allow, or 0 for infinite
 };
+class CConfigObject;
+class CStripThread;
+bool change(std::list<CStripThread*> lStrips, std::string strTransition, std::string strPreset, CConfigObject *pConfig);
 #endif//MAIN_H
