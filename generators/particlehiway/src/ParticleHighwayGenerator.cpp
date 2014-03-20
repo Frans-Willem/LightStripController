@@ -10,7 +10,7 @@ extern "C" IGenerator* CreateGenerator(unsigned int nLength, CConfigObject *s, I
 	double dMinLightness = s->getDouble("minlightness", 0.1),
 		dMaxLightness = s->getDouble("maxlightness", 0.3);
 	double dMinTail = s->getDouble("mintail", 1.0/70.0),
-		dMaxTail = s->getDouble("maxtail", 10/7.0);
+		dMaxTail = s->getDouble("maxtail", 1.0/7.0);
 	int nNumColors = s->getInt("numcolors", 6);
 	
 	return new CParticleHighwayGenerator(nLength, pScheduler, dMinCreateInterval, dMaxCreateInterval, dMinSpeed, dMaxSpeed, dMinLightness, dMaxLightness, dMinTail, dMaxTail, nNumColors);
